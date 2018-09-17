@@ -1,0 +1,9 @@
+{
+  "name": "vuebone.js",
+  "version": "1.0.0",
+  "description": "js lite client framework",
+  "main": "index.js",
+  "repository": "https://github.com/orzocogorzo/vuebone.js",
+  "author": "Lucas García <lucas@bestiario.org>",
+  "license": "MIT"
+}
