@@ -1,6 +1,6 @@
-import { LifeCycle } from "./LifeCycle.js";
-import { Dispatcher } from "./Dispatcher.js";
-import { Reactive } from "./Reactive.js";
+import { LifeCycle } from "../patchs/LifeCycle.js";
+import { Dispatcher } from "../patchs/Dispatcher.js";
+import { Reactive } from "../patchs/Reactive.js";
 
 export const BaseView = (function() {
 
@@ -19,7 +19,11 @@ export const BaseView = (function() {
         }); 
 
         return promise;
-    }
+    };
+
+    function _idGen () {
+      return Array.apply(null,Array(15)).map(_ => "abcdefghijklmnopqrstvwxyxABCDEFGHIJKLMNOPQRSTVWXYZ1234567890_-"[Math.floor(Math.random()*62)]).join("");
+    };
 
     function _initializer(config) {
 
@@ -36,8 +40,19 @@ export const BaseView = (function() {
             throw new Error("Not el defined");
         }
 
+        this.dispatch("ready");
         typeof _ready == "function" && _ready();
-    }
+    };
+
+    function _styleEncapsulator () {
+      return `<style id="${_id}">${this.styleText}</style>`
+    };
+
+    function _htmlParser (templateStr) {
+      let parser = document.createElement("template");
+      template.innerHTML = templateStr;
+      return template.content
+    };
 
     let _id, _content, _ready;
 
@@ -60,20 +75,25 @@ export const BaseView = (function() {
             new Dispatcher(this);
             new LifeCycle(this);
 
-            _id = Array.apply(null,Array(15)).map(_ => "abcdefghijklmnopqrstvwxyx1234567890_-!¡?¿><()$%&/"[Math.floor(Math.random()*49)]).join("");
+            _id = _idGen();
             this.id = config.id || _id;
             this.template = config.template;
             this.style = config.style;
-            this.data = new Reactive(config.data || new Object(), this.render);
+            this.data = new Reactive(config.data || new Object(), () => {
+              if (this.rendered) this.render
+            });
+            return this;
         };
 
-        ready(callback) {
-            _ready = callback
-        }
+        ready (callback) { 
+          _ready = callback
+        };
 
-        render() {
+        render () {
             let templateString;
-            if (typeof this.template == "string") {
+            if (!this.template) {
+              templateString = "";
+            } else if (typeof this.template == "string") {
                 templateString = this.template;
             } else if (typeof this.template == "function") {
                 templateString = this.template(this.data);
@@ -81,19 +101,25 @@ export const BaseView = (function() {
                 throw new Error("Unrecognized template format");
             };
     
-            this.el.innerHTML = templateString;
-            _content = Array.apply(null,this.el.childNodes).map(node => node.cloneNode());
+            document.head.appendChild(_htmlParser(_styleEncapsulator.bind(this)()));
+            
+            this.el.innerHTML = "";
+            _content = _htmlParser(templateString);
+            this.el.appendChild(_content);
+            this.el.setAttribute("vbid",this.id);
             this.rendered = true;
 
             return this; 
         }
 
-        dettach() {
+        detach () {
             this.el.innerHTML = "";
+            this.el.setAttribute("vbid","");
+            document.head.removeChild(document.getElementById(_id));
             return this;
         }
 
-        remove() {
+        remove () {
             if (this.parent) {
                 this.parent.removeChild(this);
             } else {
@@ -103,20 +129,19 @@ export const BaseView = (function() {
 
         addChild(Child,config) {
             config.home = this;
-            config._id = Array.apply(null,Array(15)).map(_ => "abcdefghijklmnopqrstvwxyx1234567890_-!¡?¿><()$%&/"[Math.floor(Math.random()*49)]).join("");
-            config.id = config.id || config._id;
+            config.id = config.id || _idGen();
             let child = new Child(config);
             _childs[config._id] = child;
             return child;
         };
 
-        dettachChild(child) {
-            child.dettach();
+        detachChild (child) {
+            child.detach();
             return child;
         };
 
-        removeChild(child) {
-            child.dettach();
+        removeChild (child) {
+            child.detach();
             delete _childs[child._id];
         };
 
