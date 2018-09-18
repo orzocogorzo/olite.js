@@ -1,4 +1,4 @@
-import { Router } from './url/Router.js;'
+import { Router } from './url/Router.js';
 import { BaseView } from './views/BaseView.js';
 
 export const App = (function () {

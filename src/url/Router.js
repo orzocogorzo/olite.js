@@ -1,3 +1,5 @@
+import { BaseView } from '../views/BaseView.js';
+
 export const Router = (function() {
 
   // private code block
@@ -55,7 +57,7 @@ export const Router = (function() {
   class Router {
 
     constructor(appInstance,routes) {
-      router[""] = router[""] || this.redirectToDefault;
+      routes[""] = routes[""] || this.redirectToDefault;
       _initRoutes.call(this,routes);
 
       this.currentSection = undefined;
@@ -63,18 +65,16 @@ export const Router = (function() {
 
       _app = appInstance;
 
+    }
+
+    start () {
       const routerEl = document.createElement("div");
       routerEl.id = "router";
       _app.el.appendChild(routerEl);
-    
       routerView = new BaseView(routerEl, {
         "template": "",
         "style": "#router{display:flex;flex:1;}"
       });
-
-    }
-
-    start () {
       _start.call(this);
     };
 

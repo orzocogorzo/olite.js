@@ -1,5 +1,4 @@
 import { BaseView } from './src/views/BaseView.js';
-import { Controller } from './src/url/Controller.js';
 import { Router } from './src/url/Router.js';
 import { Dispatcher } from './src/patchs/Dispatcher.js';
 import { LifeCycle } from './src/patchs/LifeCycle.js';
@@ -9,7 +8,6 @@ import { App } from './src/App.js';
 
 export default {
   BaseView,
-  Controller,
   Router,
   Dispatcher,
   LifeCycle,

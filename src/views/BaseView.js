@@ -50,8 +50,8 @@ export const BaseView = (function() {
 
     function _htmlParser (templateStr) {
       let parser = document.createElement("template");
-      template.innerHTML = templateStr;
-      return template.content
+      parser.innerHTML = templateStr;
+      return parser.content
     };
 
     let _id, _content, _ready;

@@ -1,9 +1,9 @@
-export const WebAPI = (function() {
+export const WebApi = (function() {
 	const xmlRq = new XMLHttpRequest();
 	xmlRq.responseType = "json";
 	const promiser = new Object();
 	
-	class _API {
+	class WebApi {
 		constructor( base_url ) {
 			this.root = base_url || '/';
 		}
@@ -41,6 +41,6 @@ export const WebAPI = (function() {
 		}
 	}
 
-	return _API;
+	return WebApi;
 
 })();
