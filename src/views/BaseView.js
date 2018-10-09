@@ -1,6 +1,7 @@
 import { LifeCycle } from "../patchs/LifeCycle.js";
 import { Dispatcher } from "../patchs/Dispatcher.js";
 import { Reactive } from "../patchs/Reactive.js";
+import { TemplateParser } from "../patchs/TemplateParser.js";
 
 export const BaseView = (function() {
 
@@ -30,14 +31,18 @@ export const BaseView = (function() {
         if (config.el instanceof HTMLElement) {
             this.el = config.el;
         } else if (typeof config.el == "string") {
+          if (config.home) {
+            config.el = config.home.el.querySelector(config.el);
+          } else {
             config.el = document.querySelector(config.el);
-            if (config.el instanceof HTMLElement) {
-                this.el = config.el;
-            } else {
-                throw new Error("Not el defined");
-            }
+          }
+          if (config.el instanceof HTMLElement) {
+              this.el = config.el;
+          } else {
+              throw new Error("El not finded on the DOM");
+          }
         } else {
-            throw new Error("Not el defined");
+          throw new Error("Not el defined");
         }
 
         this.dispatch("ready");
@@ -48,12 +53,6 @@ export const BaseView = (function() {
       return `<style id="${_id}">${this.styleText}</style>`
     };
 
-    function _htmlParser (templateStr) {
-      let parser = document.createElement("template");
-      parser.innerHTML = templateStr;
-      return parser.content
-    };
-
     let _id, _content, _ready;
 
     // PUBLIC CODE BLOCK
@@ -62,25 +61,26 @@ export const BaseView = (function() {
             if (!window.__root_attached) {
                 _bindDOMReady().done((function(self) {
                     return function() {
-                        _initializer.bind(self)(config);
+                        _initializer.call(self, config);
                         window.__root_attached = true; 
                     };
                 })(this));                           
             } else if (!config.home) {
                 throw new Error("Only one view can exist in as a root viewClass");
             } else {
-                _initializer.bind(this)(config);
+                _initializer.call(this, config);
             };
 
             new Dispatcher(this);
             new LifeCycle(this);
+            new TemplateParser(this);
 
             _id = _idGen();
             this.id = config.id || _id;
             this.template = config.template;
             this.style = config.style;
             this.data = new Reactive(config.data || new Object(), () => {
-              if (this.rendered) this.render
+              if (this.rendered) this.render();
             });
             return this;
         };
@@ -94,17 +94,17 @@ export const BaseView = (function() {
             if (!this.template) {
               templateString = "";
             } else if (typeof this.template == "string") {
-                templateString = this.template;
+                templateString = this.$template(this.template, this.data);
             } else if (typeof this.template == "function") {
                 templateString = this.template(this.data);
             } else {
                 throw new Error("Unrecognized template format");
             };
     
-            document.head.appendChild(_htmlParser(_styleEncapsulator.bind(this)()));
+            document.head.appendChild(this.$html(_styleEncapsulator.call(this)));
             
             this.el.innerHTML = "";
-            _content = _htmlParser(templateString);
+            _content = this.$html(templateString);
             this.el.appendChild(_content);
             this.el.setAttribute("vbid",this.id);
             this.rendered = true;

@@ -9,7 +9,7 @@ export function LifeCycle(root) {
     };
 
     function _render(sourcefn) {
-        sourcefn.bind(this)();
+        sourcefn.call(this);
         this.dispatch("render");
     };
 
@@ -19,9 +19,9 @@ export function LifeCycle(root) {
 
     let render_sourcefn = root.render;
     root.render = function() {
-        _beforeRender.bind(root)();
-        _render.bind(root)(render_sourcefn);
-        _afterRender.bind(root)();
+        _beforeRender.call(root);
+        _render.call(root, render_sourcefn);
+        _afterRender.bind(root);
     };
 
     function _beforeDettach() {
@@ -29,7 +29,7 @@ export function LifeCycle(root) {
     };
 
     function _dettach(sourcfn) {
-        sourcfn.bind(this)();
+        sourcfn.call(this);
         this.dispatch("dettach");
     };
 
@@ -39,9 +39,9 @@ export function LifeCycle(root) {
 
     let dettach_sourcefn = root.dettach;
     root.dettach = function() {
-        _beforeDettach.bind(root)();
-        _dettach.bind(root)(dettach_sourcefn);
-        _afterDettach.bind(root)();
+        _beforeDettach.call(root);
+        _dettach.call(root, dettach_sourcefn);
+        _afterDettach.call(root);
     };
 
     function _beforeRemove() {
@@ -49,7 +49,7 @@ export function LifeCycle(root) {
     };
 
     function _remove(sourcefn) {
-        sourcefn.bind(this)();
+        sourcefn.call(this);
         this.dispatch("remove");
     };
 
@@ -59,9 +59,9 @@ export function LifeCycle(root) {
 
     let remove_sourcefn = root.dettach;
     root.remove = function() {
-        _beforeRemove.bind(root)();
-        _remove.bind(root)(remove_sourcefn);
-        _afterRemove.bind(root)();
+        _beforeRemove.call(root);
+        _remove.call(root, remove_sourcefn);
+        _afterRemove.call(root);
     }
 
     if (typeof this.root.dispatch != "function") {
