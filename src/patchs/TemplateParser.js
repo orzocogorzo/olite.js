@@ -1,19 +1,4 @@
-var str = `
-<div id="main">
-	<div class="content">
-		<div vb-if="displayFirst">I'm the first element of the content</div>
-		<div vb-if="displaySecond">
-      <div vb-for="i in [1,2,3]">
-        <span>{{i}}</span>
-      </div>
-      <div vb-for="d of ['a','b','c']">
-        <span>{{lng(d)}}</span>
-      </div>
-		</div>
-	</div>
-</div>`
-
-var TemplateParser = function (root) {
+export const TemplateParser = function (root) {
   
   function _parser (str) {
     Object.keys(this).map(k => {
@@ -22,6 +7,7 @@ var TemplateParser = function (root) {
     str = str.replace(/[\n\t\r]/g, ' ').replace(/\s\s+/g, ' ');
     str = forDirective(str);
     str = ifDirective(str);
+    str = onDirective(str);
     str = eval("`" + str.replace(/{{/g, '${').replace(/}}/g,"}") + '`');
     return str;
   }
@@ -62,6 +48,21 @@ var TemplateParser = function (root) {
       }
     } else {
       throw new Error("Template string cant be parsed");
+    }
+  }
+
+  function bindEvents (el) {
+    Array.apply(null, el.querySelectorAll('[$binded]')).map(el => {
+      let eventCallback = el.getAttribute('$binded').split('%/%');
+      el.addEventListener(eventCallback[0], eval(`${eventCallback[1]}`));
+    });
+  }
+
+  function onDirective (str) {
+    directive = str.match(/vb-on:([^=]+)="([^"]+)"/);
+    while (directive) {
+      str = str.replace(/vb-on:[^=]+=/, '$binded='+directive[1]+'%/%'+directive[2]);
+      directive = str.match(/vb-on:([^=]+)="([^"]+)"/);
     }
   }
 
@@ -107,6 +108,7 @@ var TemplateParser = function (root) {
   this.htmlParser = function (str) {
     let parserNode = document.createElement("template");
     parserNode.innerHTML = str;
+    bindEvents(parserNode);
     return parserNode.content;
   }
 
@@ -114,15 +116,20 @@ var TemplateParser = function (root) {
     if (data instanceof Object === false || Array.isArray(data)) {
       throw new Error("Data must be an object");
     }
-    debugger;
-    return _parser.call(data, str);
+
+    return _parser.call(Object.assign(this, data), str);
+  }
+
+  this.parse = function (str, data) {
+    return this.htmlParser(this.parser(str, (this.data || data || {})));
   }
 
   if (!root) {
     return this;
   } else {
-    root.$template = parser;
-    root.$html = htmlParser;
+    // root.$template = parser.bind(root);
+    // root.$html = htmlParser.bind(root);
+    root.$html = parse.bind(root);
     //void
   }
 }
